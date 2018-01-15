@@ -52,6 +52,7 @@
   <ItemGroup>
     <Compile Include="EmptyUserProvider.cs" />
     <Compile Include="Helpers\WcfInstanceContext.cs" />
+    <Compile Include="Helpers\WcfOperationContextExtension.cs" />
     <Compile Include="IWcfUserProvider.cs" />
     <Compile Include="MiniProfilerRequestHeader.cs" />
     <Compile Include="MiniProfilerResultsHeader.cs" />
