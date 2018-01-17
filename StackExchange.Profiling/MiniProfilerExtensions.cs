@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Web;
+using StackExchange.Profiling.Extensions;
 
 namespace StackExchange.Profiling
 {
@@ -218,7 +219,11 @@ namespace StackExchange.Profiling
                 var timing = timings.Pop();
                 var name = htmlEncode ? HttpUtility.HtmlEncode(timing.Name) : timing.Name;
 
-                text.AppendFormat("{2} {0} = {1:###,##0.##}ms", name, timing.DurationMilliseconds, new string('>', timing.Depth));
+                text.AppendFormat("{0} {1}: Start: {2}, Duration: {3:###,##0.##}ms",
+                    new string('>', timing.Depth),
+                    name,
+                    timing.GetStartDateTime().ToString(dateFormat, CultureInfo.InvariantCulture),
+                    timing.DurationMilliseconds);
 
                 if (timing.HasCustomTimings)
                 {
