@@ -10,25 +10,8 @@
     /// </summary>
     internal class WcfOperationContextExtension : IExtension<OperationContext>
     {
-        /// <summary>
-        /// The items.
-        /// </summary>
-        private readonly IDictionary _items;
+        private readonly Hashtable _items = new Hashtable();
 
-        /// <summary>
-        /// Prevents a default instance of the <see cref="WcfInstanceContext"/> class from being created.
-        /// </summary>
-        private WcfOperationContextExtension()
-        {
-            _items = new Hashtable();
-        }
-
-        /// <summary>
-        /// Gets the current <see cref="WcfOperationContextExtension"/>. Note that if
-        /// this is only going to be used to read items, it is more <c>performant</c> to use
-        /// <see cref="GetCurrentWithoutInstantiating"/> as this does not create and
-        /// attach a new extension.
-        /// </summary>
         public static WcfOperationContextExtension Current
         {
             get
@@ -59,7 +42,7 @@
             {
                 Contract.Ensures(Contract.Result<IDictionary>() != null);
 
-                return _items;
+                return this._items;
             }
         }
 

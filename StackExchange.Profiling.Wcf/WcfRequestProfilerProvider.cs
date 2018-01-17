@@ -14,7 +14,7 @@ namespace StackExchange.Profiling.Wcf
         /// <summary>
         /// The WCF cache key.
         /// </summary>
-        private const string WcfCacheKey = ":mini-profiler:";
+        private const string WCF_CACHE_KEY = ":mini-profiler:";
 
         /// <summary>
         /// Initialises a new instance of the <see cref="WcfRequestProfilerProvider"/> class.
@@ -146,7 +146,7 @@ namespace StackExchange.Profiling.Wcf
         /// <returns>the mini profiler.</returns>
         public override MiniProfiler GetCurrentProfiler()
         {
-            return WcfOperationContextExtension.Current.Items[WcfCacheKey] as MiniProfiler;
+            return WcfOperationContextExtension.Current.Items[WCF_CACHE_KEY] as MiniProfiler;
         }
 
         /// <summary>
@@ -192,7 +192,7 @@ namespace StackExchange.Profiling.Wcf
         /// <param name="profiler">The profiler.</param>
         private void SetCurrentProfiler(MiniProfiler profiler)
         {
-            WcfOperationContextExtension.Current.Items[WcfCacheKey] = profiler;
+            WcfOperationContextExtension.Current.Items[WCF_CACHE_KEY] = profiler;
         }
     }
 }
