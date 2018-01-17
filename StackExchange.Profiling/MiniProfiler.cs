@@ -501,11 +501,11 @@ namespace StackExchange.Profiling
         }
 
         /// <summary>
-        /// Returns how many milliseconds have elapsed since <paramref name="startTicks"/> was recorded.
+        /// Returns how many milliseconds have elapsed since <paramref name="sinceTicks"/> was recorded.
         /// </summary>
-        internal decimal GetDurationMilliseconds(long startTicks)
+        public decimal GetElapsedMilliseconds(long sinceTicks = 0)
         {
-            return GetRoundedMilliseconds(ElapsedTicks - startTicks);
+            return GetRoundedMilliseconds(ElapsedTicks - sinceTicks);
         }
 
         /// <summary>

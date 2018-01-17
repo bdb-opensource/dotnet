@@ -232,7 +232,7 @@ namespace StackExchange.Profiling
         public void Stop()
         {
             if (DurationMilliseconds != null) return;
-            DurationMilliseconds = Profiler.GetDurationMilliseconds(_startTicks);
+            DurationMilliseconds = Profiler.GetElapsedMilliseconds(_startTicks);
             Profiler.Head = ParentTiming;
 
             if (_minSaveMs.HasValue && _minSaveMs.Value > 0 && ParentTiming != null)

@@ -97,7 +97,7 @@ namespace StackExchange.Profiling
         {
             if (FirstFetchDurationMilliseconds == null)
             {
-                FirstFetchDurationMilliseconds = _profiler.GetDurationMilliseconds(_startTicks);
+                FirstFetchDurationMilliseconds = _profiler.GetElapsedMilliseconds(_startTicks);
             }
         }
 
@@ -108,7 +108,7 @@ namespace StackExchange.Profiling
         {
             if (DurationMilliseconds == null)
             {
-                DurationMilliseconds = _profiler.GetDurationMilliseconds(_startTicks);
+                DurationMilliseconds = _profiler.GetElapsedMilliseconds(_startTicks);
             }
 
             if (_minSaveMs.HasValue && _minSaveMs.Value > 0)
