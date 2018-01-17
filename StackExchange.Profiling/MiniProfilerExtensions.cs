@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Web;
@@ -11,6 +12,8 @@ namespace StackExchange.Profiling
     /// </summary>
     public static class MiniProfilerExtensions
     {
+        private const string DefaultDateFormat = "yyyy-MM-dd HH:mm:ss,fff";
+
         /// <summary>
         /// Wraps <paramref name="selector"/> in a <see cref="Step(MiniProfiler, string)"/> call and executes it, returning its result.
         /// </summary>
@@ -43,6 +46,7 @@ namespace StackExchange.Profiling
         {
             return profiler.Inline(selector, name);
         }
+
         /// <summary>
         /// Returns an <see cref="IDisposable"/> that will time the code between its creation and disposal.
         /// </summary>
@@ -77,7 +81,7 @@ namespace StackExchange.Profiling
         /// <param name="includeChildren">Should the amount of time spent in child timings be included when comparing total time
         /// profiled with <paramref name="minSaveMs"/>? If true, will include children. If false will ignore children.</param>
         /// <returns></returns>
-        /// <remarks>If <paramref name="includeChildren"/> is set to true and a child is removed due to its use of StepIf, then the 
+        /// <remarks>If <paramref name="includeChildren"/> is set to true and a child is removed due to its use of StepIf, then the
         /// time spent in that time will also not count for the current StepIf calculation.</remarks>
         public static IDisposable StepIf(this MiniProfiler profiler, string name, decimal minSaveMs, bool includeChildren = false)
         {
@@ -111,7 +115,7 @@ namespace StackExchange.Profiling
         /// <param name="executeType">Execute Type to be associated with the Custom Timing. Example: Get, Set, Insert, Delete</param>
         /// <param name="minSaveMs">The minimum amount of time that needs to elapse in order for this result to be recorded.</param>
         /// <remarks>
-        /// Should be used like the <see cref="Step(MiniProfiler, string)"/> extension method 
+        /// Should be used like the <see cref="Step(MiniProfiler, string)"/> extension method
         /// </remarks>
         public static CustomTiming CustomTimingIf(this MiniProfiler profiler, string category, string commandString, decimal minSaveMs, string executeType = null)
         {
@@ -142,7 +146,7 @@ namespace StackExchange.Profiling
         {
             return profiler == null ? null : profiler.IgnoreImpl();
         }
-        
+
         /// <summary>
         /// Adds <paramref name="externalProfiler"/>'s <see cref="Timing"/> hierarchy to this profiler's current Timing step,
         /// allowing other threads, remote calls, etc. to be profiled and joined into this profiling session.
@@ -154,7 +158,7 @@ namespace StackExchange.Profiling
         }
 
         /// <summary>
-        /// Adds the <paramref name="text"/> and <paramref name="url"/> pair to <paramref name="profiler"/>'s 
+        /// Adds the <paramref name="text"/> and <paramref name="url"/> pair to <paramref name="profiler"/>'s
         /// <see cref="MiniProfiler.CustomLinks"/> dictionary; will be displayed on the client in the bottom of the profiler popup.
         /// </summary>
         public static void AddCustomLink(this MiniProfiler profiler, string text, string url)
@@ -176,29 +180,34 @@ namespace StackExchange.Profiling
         /// Returns an html-encoded string with a text-representation of <paramref name="profiler"/>; returns "" when profiler is null.
         /// </summary>
         /// <param name="profiler">The current profiling session or null.</param>
-        public static IHtmlString Render(this MiniProfiler profiler)
+        /// <param name="dateFormat">The format of the date fields.</param>
+        public static IHtmlString Render(this MiniProfiler profiler,
+            string dateFormat = DefaultDateFormat)
         {
-            return new HtmlString(RenderImpl(profiler, true));
+            return new HtmlString(RenderImpl(profiler, true, dateFormat));
         }
 
         /// <summary>
-        /// Returns a plain-text representation of <paramref name="profiler"/>, suitable for viewing from 
+        /// Returns a plain-text representation of <paramref name="profiler"/>, suitable for viewing from
         /// <see cref="Console"/>, log, or unit test output.
         /// </summary>
         /// <param name="profiler">A profiling session with child <see cref="Timing"/> instances.</param>
-        public static string RenderPlainText(this MiniProfiler profiler)
+        /// <param name="dateFormat">The format of the date fields.</param>
+        public static string RenderPlainText(this MiniProfiler profiler,
+            string dateFormat = DefaultDateFormat)
         {
-            return RenderImpl(profiler, false);
+            return RenderImpl(profiler, false, dateFormat);
         }
 
-        private static string RenderImpl(MiniProfiler profiler, bool htmlEncode)
+        private static string RenderImpl(MiniProfiler profiler, bool htmlEncode,
+            string dateFormat = DefaultDateFormat)
         {
             if (profiler == null) return string.Empty;
 
             var text = new StringBuilder()
                 .Append(htmlEncode ? HttpUtility.HtmlEncode(Environment.MachineName) : Environment.MachineName)
                 .Append(" at ")
-                .Append(DateTime.UtcNow)
+                .Append(profiler.Started.ToLocalTime().ToString(dateFormat, CultureInfo.InvariantCulture))
                 .AppendLine();
 
             var timings = new Stack<Timing>();
@@ -218,8 +227,8 @@ namespace StackExchange.Profiling
                         var type = pair.Key;
                         var customTimings = pair.Value;
 
-                        text.AppendFormat(" ({0} = {1:###,##0.##}ms in {2} cmd{3})", 
-                            type, 
+                        text.AppendFormat(" ({0} = {1:###,##0.##}ms in {2} cmd{3})",
+                            type,
                             customTimings.Sum(ct => ct.DurationMilliseconds),
                             customTimings.Count,
                             customTimings.Count == 1 ? "" : "s");
@@ -227,7 +236,7 @@ namespace StackExchange.Profiling
                 }
 
                 text.AppendLine();
-                
+
                 if (timing.HasChildren)
                 {
                     var children = timing.Children;
