@@ -14,9 +14,10 @@ namespace StackExchange.Profiling.Extensions
         /// Gets the start time of the <see cref="Timing"/>.
         /// </summary>
         /// <seealso cref="Timing.StartMilliseconds"/>
-        public static DateTime GetStartDateTime(this Timing timing)
+        public static DateTime? GetStartDateTime(this Timing timing)
         {
-            return timing.Profiler.Started.AddMilliseconds((double)timing.StartMilliseconds).ToLocalTime();
+            // TODO: Profiler is not always defined. 
+            return timing.Profiler?.Started.AddMilliseconds((double)timing.StartMilliseconds).ToLocalTime();
         }
     }
 }

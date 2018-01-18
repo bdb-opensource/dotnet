@@ -222,7 +222,7 @@ namespace StackExchange.Profiling
                 text.AppendFormat("{0} {1}: Start: {2}, Duration: {3:###,##0.##}ms",
                     new string('>', timing.Depth),
                     name,
-                    timing.GetStartDateTime().ToString(dateFormat, CultureInfo.InvariantCulture),
+                    timing.GetStartDateTime()?.ToString(dateFormat, CultureInfo.InvariantCulture) ?? "N/A",
                     timing.DurationMilliseconds);
 
                 if (timing.HasCustomTimings)
