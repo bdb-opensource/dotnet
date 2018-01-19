@@ -35,12 +35,12 @@ namespace StackExchange.Profiling
                     pair.PropertyInfo.SetValue(null, Convert.ChangeType(pair.DefaultValue.Value, pair.PropertyInfo.PropertyType), null);
                 }
 
-                // this assists in debug and is also good for prd, the version is a hash of the main assembly 
+                // this assists in debug and is also good for prd, the version is a hash of the main assembly
 
                 string location;
                 try
                 {
-                    location = typeof (Settings).Assembly.Location;
+                    location = typeof(Settings).Assembly.Location;
                 }
                 catch
                 {
@@ -66,7 +66,7 @@ namespace StackExchange.Profiling
                         byte[] hash = new byte[sha256.HashSize / 8];
                         foreach (string file in files)
                         {
-                            // sha256 can throw a FIPS exception, but SHA256CryptoServiceProvider is FIPS BABY - FIPS 
+                            // sha256 can throw a FIPS exception, but SHA256CryptoServiceProvider is FIPS BABY - FIPS
                             byte[] contents = System.IO.File.ReadAllBytes(file);
                             byte[] hashfile = sha256.ComputeHash(contents);
                             for (int i = 0; i < (sha256.HashSize / 8); i++)
@@ -250,13 +250,12 @@ namespace StackExchange.Profiling
             public static bool ExcludeStackTraceSnippetFromSqlTimings { get; set; }
 
             /// <summary>
-            /// By default, <see cref="CustomTiming"/>s created by this assmebly will grab a stack trace to help 
-            /// locate where Remote Procedure Calls are being executed.  When this setting is true, no stack trace 
+            /// By default, <see cref="CustomTiming"/>s created by this assmebly will grab a stack trace to help
+            /// locate where Remote Procedure Calls are being executed.  When this setting is true, no stack trace
             /// will be collected, possibly improving profiler performance.
             /// </summary>
             [DefaultValue(false)]
             public static bool ExcludeStackTraceSnippetFromCustomTimings { get; set; }
-
 
             /// <summary>
             /// When <see cref="MiniProfiler.Start(string)"/> is called, if the current request url contains any items in this property,
@@ -301,7 +300,7 @@ namespace StackExchange.Profiling
             /// 4) profiler is stopped
             /// 5) profiler is cached with <see cref="Storage"/>'s implementation of <see cref="StackExchange.Profiling.Storage.IStorage.Save"/>
             /// 6) request ends
-            /// 7) page is displayed and profiling results are ajax-fetched down, pulling cached results from 
+            /// 7) page is displayed and profiling results are ajax-fetched down, pulling cached results from
             ///    <see cref="Storage"/>'s implementation of <see cref="StackExchange.Profiling.Storage.IStorage.Load"/>
             /// </remarks>
             public static Storage.IStorage Storage { get; set; }
@@ -310,7 +309,7 @@ namespace StackExchange.Profiling
             /// The formatter applied to any SQL before being set in a <see cref="CustomTiming.CommandString"/>.
             /// </summary>
             public static ISqlFormatter SqlFormatter { get; set; }
-            
+
             /// <summary>
             /// Assembly version of this dank MiniProfiler.
             /// </summary>
@@ -334,7 +333,7 @@ namespace StackExchange.Profiling
             public static Func<HttpRequest, bool> Results_Authorize { get; set; }
 
             /// <summary>
-            /// Special authorization function that is called for the list results (listing all the profiling sessions), 
+            /// Special authorization function that is called for the list results (listing all the profiling sessions),
             /// we also test for results authorize always. This must be set and return true, to enable the listing feature.
             /// </summary>
             public static Func<HttpRequest, bool> Results_List_Authorize { get; set; }
@@ -346,7 +345,7 @@ namespace StackExchange.Profiling
             {
                 if (Storage == null)
                 {
-                    Storage = new Storage.HttpRuntimeCacheStorage(TimeSpan.FromDays(1));
+                    Storage = new DummyStorage();
                 }
             }
 

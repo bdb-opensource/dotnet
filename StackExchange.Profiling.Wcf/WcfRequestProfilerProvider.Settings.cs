@@ -16,15 +16,6 @@
             /// Gets or sets the user provider.
             /// </summary>
             public static IWcfUserProvider UserProvider { get; set; }
-
-            /// <summary>
-            /// ensure the storage strategy.
-            /// </summary>
-            internal static void EnsureStorageStrategy()
-            {
-                if (MiniProfiler.Settings.Storage == null)
-                    MiniProfiler.Settings.Storage = new WcfRequestInstanceStorage();
-            }
         }
     }
 }
