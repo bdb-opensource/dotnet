@@ -38,7 +38,7 @@
                     var requestHeader = request.Headers.GetHeader<MiniProfilerRequestHeader>(headerIndex);
                     if (requestHeader != null)
                     {
-                    	MiniProfiler.Settings.ProfilerProvider = new WcfRequestProfilerProvider();
+                        MiniProfiler.Settings.ProfilerProvider = new WcfRequestProfilerProvider();
                         MiniProfiler.Start();
                         return requestHeader;
                     }
@@ -56,7 +56,7 @@
                     if (!string.IsNullOrEmpty(text))
                     {
                         var header = MiniProfilerRequestHeader.FromHeaderText(text);
-                    	MiniProfiler.Settings.ProfilerProvider = new WcfRequestProfilerProvider();
+                        MiniProfiler.Settings.ProfilerProvider = new WcfRequestProfilerProvider();
                         MiniProfiler.Start();
                         return header;
                     }

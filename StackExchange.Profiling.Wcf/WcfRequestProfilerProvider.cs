@@ -21,9 +21,6 @@ namespace StackExchange.Profiling.Wcf
         /// </summary>
         public WcfRequestProfilerProvider()
         {
-            // By default use a per request storage model only
-            MiniProfiler.Settings.Storage =
-                MiniProfiler.Settings.Storage ?? new WcfRequestInstanceStorage();
         }
 
         /// <summary>
@@ -86,7 +83,7 @@ namespace StackExchange.Profiling.Wcf
 
             // TODO: Include the action name here as well, and null protection
             string serviceName = instanceContext.Host.Description.Name;
-            
+
             // BaseAddresses.FirstOrDefault();
             // TODO: Ignored paths - currently solely based on servicename
 

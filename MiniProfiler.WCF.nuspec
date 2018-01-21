@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>MiniProfiler.WCF</id>
-    <version>3.0.12.1-wcffix-003</version>
+    <version>3.0.12.1-wcffix-004</version>
     <authors>Marc Gravell, Sam Saffron, Jarrod Dixon</authors>
     <owners>Marc Gravell, Sam Saffron, Jarrod Dixon</owners>
     <description>MiniProfiler integration for WCF</description>
