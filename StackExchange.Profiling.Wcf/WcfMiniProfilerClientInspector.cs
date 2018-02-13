@@ -113,13 +113,11 @@
                 throw new InvalidOperationException("MVC Mini Profiler does not support EnvelopeNone unless HTTP is the transport mechanism");
             }
 
-            if (resultsHeader == null || resultsHeader.ProfilerResults == null)
+            if (null != resultsHeader && null != resultsHeader.ProfilerResults)
             {
-                return;
+                resultsHeader.ProfilerResults.Root.UpdateStartMillisecondTimingsToAbsolute(profilerState.StartTime);
+                profilerState.Timing.AddChild(resultsHeader.ProfilerResults.Root);
             }
-
-            resultsHeader.ProfilerResults.Root.UpdateStartMillisecondTimingsToAbsolute(profilerState.StartTime);
-            profilerState.Timing.AddChild(resultsHeader.ProfilerResults.Root);
 
             profilerState.Timing.Stop();
         }
