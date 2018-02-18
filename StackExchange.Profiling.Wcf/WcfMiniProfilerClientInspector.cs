@@ -17,19 +17,6 @@
         private bool _http;
 
         /// <summary>
-        /// Initialises static members of the <see cref="WcfMiniProfilerClientInspector"/> class.
-        /// </summary>
-        static WcfMiniProfilerClientInspector()
-        {
-            GetCurrentProfiler = () => MiniProfiler.Current;
-        }
-
-        /// <summary>
-        /// Gets or sets the get current profiler.
-        /// </summary>
-        public static Func<MiniProfiler> GetCurrentProfiler { get; set; }
-
-        /// <summary>
         /// before the send request.
         /// </summary>
         /// <param name="request">The request.</param>
@@ -37,44 +24,51 @@
         /// <returns>the mini profiler start</returns>
         public object BeforeSendRequest(ref Message request, IClientChannel channel)
         {
-            // If we currently are running inside a MiniProfiler context, then add a request onto this request
-            var miniProfiler = GetCurrentProfiler();
-            if (miniProfiler != null)
+            var miniProfiler = MiniProfiler.Current;
+            if (miniProfiler == null)
             {
-                var header = new MiniProfilerRequestHeader
-                {
-                    User = miniProfiler.User,
-                    ParentProfilerId = miniProfiler.Id
-                };
-
-                // ReSharper disable PossibleUnintendedReferenceComparison
-                if (request.Headers.MessageVersion != MessageVersion.None)
-                // ReSharper restore PossibleUnintendedReferenceComparison
-                {
-                    var untypedHeader = new MessageHeader<MiniProfilerRequestHeader>(header)
-                    .GetUntypedHeader(MiniProfilerRequestHeader.HeaderName, MiniProfilerRequestHeader.HeaderNamespace);
-                    request.Headers.Add(untypedHeader);
-                }
-                else if (_http || WebOperationContext.Current != null || channel.Via.Scheme == "http" | channel.Via.Scheme == "https")
-                {
-                    _http = true;
-
-                    if (!request.Properties.ContainsKey(HttpRequestMessageProperty.Name))
-                    {
-                        request.Properties.Add(HttpRequestMessageProperty.Name, new HttpRequestMessageProperty());
-                    }
-                    HttpRequestMessageProperty property = (HttpRequestMessageProperty)request.Properties[HttpRequestMessageProperty.Name];
-
-                    property.Headers.Add(MiniProfilerRequestHeader.HeaderName, header.ToHeaderText());
-                }
-                else
-                    throw new InvalidOperationException("MVC Mini Profiler does not support EnvelopeNone unless HTTP is the transport mechanism");
-
-                // Can't use MiniProfiler.DurationMilliseconds as it is set only when the profiler is stopped
-                return new MiniProfilerStart { StartTime = miniProfiler.GetElapsedMilliseconds() };
+                return null;
             }
 
-            return null;
+            miniProfiler.Step($"WCF call to {channel.RemoteAddress.Uri}");
+
+            var header = new MiniProfilerRequestHeader
+            {
+                User = miniProfiler.User,
+                ParentProfilerId = miniProfiler.Id
+            };
+
+            // ReSharper disable PossibleUnintendedReferenceComparison
+            if (request.Headers.MessageVersion != MessageVersion.None)
+            // ReSharper restore PossibleUnintendedReferenceComparison
+            {
+                var untypedHeader = new MessageHeader<MiniProfilerRequestHeader>(header)
+                    .GetUntypedHeader(MiniProfilerRequestHeader.HeaderName, MiniProfilerRequestHeader.HeaderNamespace);
+                request.Headers.Add(untypedHeader);
+            }
+            else if (_http || WebOperationContext.Current != null || channel.Via.Scheme == "http" || channel.Via.Scheme == "https")
+            {
+                _http = true;
+
+                object property;
+                if (!request.Properties.TryGetValue(HttpRequestMessageProperty.Name, out property))
+                {
+                    property = new HttpRequestMessageProperty();
+                    request.Properties.Add(HttpRequestMessageProperty.Name, property);
+                }
+                ((HttpRequestMessageProperty)property).Headers.Add(MiniProfilerRequestHeader.HeaderName, header.ToHeaderText());
+            }
+            else
+            {
+                throw new InvalidOperationException("MVC Mini Profiler does not support EnvelopeNone unless HTTP is the transport mechanism");
+            }
+
+            return new MiniProfilerState
+            {
+                Timing = miniProfiler.Head,
+                // Can't use MiniProfiler.DurationMilliseconds as it is set only when the profiler is stopped
+                StartTime = miniProfiler.GetElapsedMilliseconds()
+            };
         }
 
         /// <summary>
@@ -84,53 +78,62 @@
         /// <param name="correlationState">The correlation state.</param>
         public void AfterReceiveReply(ref Message reply, object correlationState)
         {
-            var profilerStart = correlationState as MiniProfilerStart;
+            var profilerState = correlationState as MiniProfilerState;
 
-            // Check to see if there are any results here
-            var profiler = GetCurrentProfiler();
-            if (profiler != null)
+            if (profilerState == null || profilerState.Timing == null)
             {
-                // Check to see if we have a request as part of this message
-                MiniProfilerResultsHeader resultsHeader = null;
-                // ReSharper disable PossibleUnintendedReferenceComparison
-                if (reply.Headers.MessageVersion != MessageVersion.None)
-                // ReSharper restore PossibleUnintendedReferenceComparison
+                return;
+            }
+            // Check to see if we have a request as part of this message
+            MiniProfilerResultsHeader resultsHeader = null;
+            // ReSharper disable PossibleUnintendedReferenceComparison
+            if (reply.Headers.MessageVersion != MessageVersion.None)
+            // ReSharper restore PossibleUnintendedReferenceComparison
+            {
+                var headerIndex = reply.Headers.FindHeader(MiniProfilerResultsHeader.HeaderName, MiniProfilerResultsHeader.HeaderNamespace);
+                if (headerIndex >= 0)
                 {
-                    var headerIndex = reply.Headers.FindHeader(MiniProfilerResultsHeader.HeaderName, MiniProfilerResultsHeader.HeaderNamespace);
-                    if (headerIndex >= 0)
-                        resultsHeader = reply.Headers.GetHeader<MiniProfilerResultsHeader>(headerIndex);
-                }
-                else if (_http || reply.Properties.ContainsKey(HttpResponseMessageProperty.Name))
-                {
-                    _http = true;
-
-                    var property = (HttpResponseMessageProperty)reply.Properties[HttpResponseMessageProperty.Name];
-
-                    var text = property.Headers[MiniProfilerResultsHeader.HeaderName];
-                    if (!string.IsNullOrEmpty(text))
-                        resultsHeader = MiniProfilerResultsHeader.FromHeaderText(text);
-                }
-                else
-                    throw new InvalidOperationException("MVC Mini Profiler does not support EnvelopeNone unless HTTP is the transport mechanism");
-
-                if (resultsHeader != null && resultsHeader.ProfilerResults != null)
-                {
-                    // Update timings of profiler results
-                    if (profilerStart != null)
-                        resultsHeader.ProfilerResults.Root.UpdateStartMillisecondTimingsToAbsolute(profilerStart.StartTime);
-
-                    profiler.AddProfilerResults(resultsHeader.ProfilerResults);
+                    resultsHeader = reply.Headers.GetHeader<MiniProfilerResultsHeader>(headerIndex);
                 }
             }
+            else if (_http || reply.Properties.ContainsKey(HttpResponseMessageProperty.Name))
+            {
+                _http = true;
+
+                var property = (HttpResponseMessageProperty)reply.Properties[HttpResponseMessageProperty.Name];
+
+                var text = property.Headers[MiniProfilerResultsHeader.HeaderName];
+                if (!string.IsNullOrEmpty(text))
+                {
+                    resultsHeader = MiniProfilerResultsHeader.FromHeaderText(text);
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException("MVC Mini Profiler does not support EnvelopeNone unless HTTP is the transport mechanism");
+            }
+
+            if (null != resultsHeader && null != resultsHeader.ProfilerResults)
+            {
+                resultsHeader.ProfilerResults.Root.UpdateStartMillisecondTimingsToAbsolute(profilerState.StartTime);
+                profilerState.Timing.AddChild(resultsHeader.ProfilerResults.Root);
+            }
+
+            profilerState.Timing.Stop();
         }
 
         /// <summary>
-        /// The mini profiler start.
+        /// The mini profiler state before the WCF call.
         /// </summary>
-        private class MiniProfilerStart
+        private class MiniProfilerState
         {
             /// <summary>
-            /// Gets or sets the start time.
+            /// Gets or sets the timing within which the WCF call was made.
+            /// </summary>
+            public Timing Timing { get; set; }
+
+            /// <summary>
+            /// Gets or sets the number of miliseconds between the start of profiler and the beginning of the WCF call.
             /// </summary>
             public decimal StartTime { get; set; }
         }
