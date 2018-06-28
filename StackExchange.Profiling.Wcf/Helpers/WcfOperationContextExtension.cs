@@ -19,7 +19,7 @@
                 var context = OperationContext.Current;
                 if (null == context)
                 {
-                    throw new InvalidOperationException("An attempt was made to access a WCF operation context extension outside of WCF context.");
+                    return null;
                 }
 
                 var extension = context.Extensions.Find<WcfOperationContextExtension>();
