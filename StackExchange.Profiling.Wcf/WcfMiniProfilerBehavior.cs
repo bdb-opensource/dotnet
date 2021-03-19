@@ -1,6 +1,7 @@
 ﻿namespace StackExchange.Profiling.Wcf
 {
     using System;
+    using System.Configuration;
     using System.ServiceModel.Configuration;
     using System.ServiceModel.Description;
 
@@ -9,6 +10,21 @@
     /// </summary>
     public class WcfMiniProfilerBehavior : BehaviorExtensionElement, IEndpointBehavior
     {
+        [ConfigurationProperty("logSql")]
+        public bool LogSqlCommandText
+        {
+            get
+            {
+                if (bool.TryParse(this["logSql"]?.ToString(), out var val))
+                {
+                    return val;
+                }
+                return false;
+            }
+
+            set => this["logSql"] = value;
+        }
+
         /// <summary>
         /// Gets the behaviour type.
         /// </summary>
@@ -44,7 +60,7 @@
         /// <param name="endpointDispatcher">The endpoint dispatcher.</param>
         public void ApplyDispatchBehavior(ServiceEndpoint endpoint, System.ServiceModel.Dispatcher.EndpointDispatcher endpointDispatcher)
         {
-            var inspector = new WcfMiniProfilerDispatchInspector();
+            var inspector = new WcfMiniProfilerDispatchInspector(this.LogSqlCommandText);
             endpointDispatcher.DispatchRuntime.MessageInspectors.Add(inspector);
         }
 
