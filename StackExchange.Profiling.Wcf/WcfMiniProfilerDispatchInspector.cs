@@ -12,10 +12,17 @@
     /// </summary>
     public class WcfMiniProfilerDispatchInspector : IDispatchMessageInspector
     {
+        protected readonly bool _logSqlCommandText;
+
         /// <summary>
         /// true if the binding is using http.
         /// </summary>
         private bool _http;
+
+        public WcfMiniProfilerDispatchInspector(bool logSqlCommandText)
+        {
+            this._logSqlCommandText = logSqlCommandText;
+        }
 
         /// <summary>
         /// after the request is received.
@@ -84,6 +91,13 @@
                 if (requestHeader.ExcludeTrivialMethods)
                 {
                     miniProfiler.Root.RemoveTrivialTimings();
+                }
+
+                if ((false == this._logSqlCommandText) && (null != miniProfiler.Root.CustomTimings)
+                                                       && (miniProfiler.Root.CustomTimings.ContainsKey("sql")))
+                {
+                    miniProfiler = miniProfiler.Clone();
+                    miniProfiler.Root.CustomTimings.Remove("sql");
                 }
 
                 var header = new MiniProfilerResultsHeader

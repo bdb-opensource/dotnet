@@ -94,6 +94,7 @@
       <HintPath>..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Transactions" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
@@ -122,6 +123,7 @@
     <Compile Include="Storage\MultiStorageProviderTests.cs" />
     <Compile Include="Storage\TestHttpRuntimeCacheStorage.cs" />
     <Compile Include="UnitTestStopwatch.cs" />
+    <Compile Include="WCF\WcfMiniProfilerDispatchInspectorTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -138,11 +140,16 @@
       <Project>{7F18DC76-61A2-4E7D-BA5A-FE159E789362}</Project>
       <Name>StackExchange.Profiling.EntityFramework</Name>
     </ProjectReference>
+    <ProjectReference Include="..\StackExchange.Profiling.Wcf\StackExchange.Profiling.Wcf.csproj">
+      <Project>{c471b0e5-0ae4-48e0-a938-02aeda030c5e}</Project>
+      <Name>StackExchange.Profiling.Wcf</Name>
+    </ProjectReference>
     <ProjectReference Include="..\StackExchange.Profiling\StackExchange.Profiling.csproj">
       <Project>{386222BD-6B6E-480F-A342-8DE1AB516E2C}</Project>
       <Name>StackExchange.Profiling</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
